@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux'
 import { useEffect, useRef, useState } from 'react'
 import { getDownloadURL, getStorage ,ref, uploadBytesResumable} from 'firebase/storage'
 import { app } from '../firebase'
-import { updateUserStart,updateUserSuccess,updateUserFailure } from '../redux/user/userSlic'
+import { updateUserStart,updateUserSuccess,updateUserFailure, deleteUserFailure, deleteUserStart, deleteUserSucess } from '../redux/user/userSlic'
 import { useDispatch } from 'react-redux'
 const sty_input = "border p-3 rounded-lg"
 
@@ -14,6 +14,7 @@ export default function Profile() {
   const [filePerc,setfilePerc] = useState(0);
   const [fileUploadError,setfileUploadError] = useState(false);
   const [formData,setformData] = useState({});
+  const [updateSuccess,setUpdateSuccess] = useState(false);
   const dispatch = useDispatch();
   // console.log(file);
   // console.log(filePerc);
@@ -62,9 +63,26 @@ export default function Profile() {
       return;
     }
     dispatch(updateUserSuccess(data));
+    setUpdateSuccess(true);
 
     } catch (error) {
       dispatch(updateUserFailure(error.message))
+    }
+  }
+  const handleDeleteUser = async()=>{
+    try {
+      dispatch(deleteUserStart());
+      const res = await fetch(`/api/user/delete/${currentUser._id}`,
+      {method:'DELETE'});
+      const data = res.json();
+      if(data.success === false){
+        dispatch(deleteUserFailure(data.message));
+        return;
+      }
+      dispatch(deleteUserSucess(data));
+
+    } catch (error) {
+      dispatch(deleteUserFailure(error.message));
     }
   }
 
@@ -104,10 +122,11 @@ export default function Profile() {
           </button>
       </form>
       <div className='flex justify-between mt-5'>
-        <span className='text-red-700 cursor-pointer'>Delete account</span>
+        <span onClick={handleDeleteUser} className='text-red-700 cursor-pointer'>Delete account</span>
         <span className='text-red-700 cursor-pointer'>Sign out</span>
       </div>
       <p className="text-red-700">{error ? error:""}</p>
+      <p className="text-green-700 mt-5">{updateSuccess?"User is update successfully":''}</p>
     </div>
   )
 }
