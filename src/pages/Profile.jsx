@@ -3,8 +3,9 @@ import { useSelector } from 'react-redux'
 import { useEffect, useRef, useState } from 'react'
 import { getDownloadURL, getStorage ,ref, uploadBytesResumable} from 'firebase/storage'
 import { app } from '../firebase'
-import { updateUserStart,updateUserSuccess,updateUserFailure, deleteUserFailure, deleteUserStart, deleteUserSucess } from '../redux/user/userSlic'
+import { updateUserStart,updateUserSuccess,updateUserFailure, deleteUserFailure, deleteUserStart, deleteUserSucess, signInFailure, signInStart, signOutUserFailure, signOutUserStart, signOutUserSucess } from '../redux/user/userSlic'
 import { useDispatch } from 'react-redux'
+import {Link} from "react-router-dom"
 const sty_input = "border p-3 rounded-lg"
 
 export default function Profile() {
@@ -85,6 +86,19 @@ export default function Profile() {
       dispatch(deleteUserFailure(error.message));
     }
   }
+  const handleSignOut = async()=>{
+    try {
+      dispatch(signOutUserStart());
+      const res= await fetch("/api/auth/signout");
+      const data = res.json();
+      if(data.success === false){
+        dispatch(signOutUserFailure(data.message));
+      }
+      dispatch(signOutUserSucess(data));
+    } catch (error) {
+      dispatch(signOutUserFailure(error.message))
+    }
+  }
 
   useEffect(()=>{
     if(file){
@@ -120,10 +134,13 @@ export default function Profile() {
          disabled:opacity-80'>
           {loading? "Loading...":'Update'}
           </button>
+        <Link to={"/create-list"} className="bg-green-700 text-white p-3 rounded-lg uppercase text-center hover:opacity-95">
+          Create Listing
+        </Link>
       </form>
       <div className='flex justify-between mt-5'>
         <span onClick={handleDeleteUser} className='text-red-700 cursor-pointer'>Delete account</span>
-        <span className='text-red-700 cursor-pointer'>Sign out</span>
+        <span onClick={handleSignOut} className='text-red-700 cursor-pointer'>Sign out</span>
       </div>
       <p className="text-red-700">{error ? error:""}</p>
       <p className="text-green-700 mt-5">{updateSuccess?"User is update successfully":''}</p>
